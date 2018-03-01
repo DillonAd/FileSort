@@ -17,6 +17,9 @@ func main() {
 
 	var configs []*Config
 	configs = ParseConfiguration(configFile)
+
+	runService()
+
 	watcher := NewWatcher()
 	defer watcher.Stop()
 	for _, c := range configs {

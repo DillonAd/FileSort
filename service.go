@@ -48,27 +48,24 @@ loop:
 	return
 }
 
-func runService(isDebug bool) {
+func runService() {
 	var err error
-	if isDebug {
-		elog = debug.New(ServiceName)
-	} else {
-		elog, err = eventlog.Open(ServiceName)
-		if err != nil {
-			return
-		}
+
+	elog, err = eventlog.Open(ServiceName)
+	if err != nil {
+		return
 	}
+
 	defer elog.Close()
 
 	elog.Info(1, fmt.Sprintf("starting %s service", ServiceName))
 	run := svc.Run
-	if isDebug {
-		run = debug.Run
-	}
+
 	err = run(ServiceName, &fileSortService{})
 	if err != nil {
 		elog.Error(1, fmt.Sprintf("%s service failed: %v", ServiceName, err))
 		return
 	}
+
 	elog.Info(1, fmt.Sprintf("%s service stopped", ServiceName))
 }
