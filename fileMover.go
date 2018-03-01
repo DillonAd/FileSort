@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+//FileMover - Contract for moving files
 type FileMover interface {
 	MoveFile(string)
 }
@@ -13,6 +14,7 @@ type fileMover struct {
 	config []Config
 }
 
+//NewFileMover - Returns a new instance of FileMover
 func NewFileMover(configs []Config) FileMover {
 	fm := &fileMover{}
 	fm.config = configs

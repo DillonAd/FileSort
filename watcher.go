@@ -16,10 +16,12 @@ type Watcher interface {
 	Stop()
 }
 
+//FileWatcher - Implementation of Watcher
 type FileWatcher struct {
 	watcher      fsnotify.Watcher
 	directories  []string
 	endure       bool
+	stopped      chan bool
 	FileModified chan string
 }
 
@@ -28,16 +30,20 @@ func NewWatcher() *FileWatcher {
 	return &FileWatcher{}
 }
 
+//GetWatchedDirectories - Gets the directories currently being watched
 func (w *FileWatcher) GetWatchedDirectories() []string {
 	return w.directories
 }
 
+//Start - Starts watching for file changes in watched directories
 func (w *FileWatcher) Start() {
 	go start(w)
 }
 
+//Stop - Stops watching for file changes in watched directories
 func (w *FileWatcher) Stop() {
 	w.endure = false
+	<-w.stopped
 	w.watcher.Close()
 }
 
@@ -62,6 +68,8 @@ func start(w *FileWatcher) {
 				log.Println("error:", err)
 			}
 		}
+		w.stopped <- true
+		done <- true
 	}()
 
 	<-done
