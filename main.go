@@ -15,17 +15,9 @@ func main() {
 	flag.Parse()
 	fmt.Println("Reading configuration : " + configFile)
 
-	var configs []*Config
+	var configs []Config
+	//TODO Read config
 	configs = ParseConfiguration(configFile)
 
-	runService()
-
-	watcher := NewWatcher()
-	defer watcher.Stop()
-	for _, c := range configs {
-		watcher.AddWatcherDirectory(c.DestinationPath)
-	}
-
-	go watcher.Start()
-
+	runService(configs)
 }

@@ -13,8 +13,8 @@ type Config struct {
 }
 
 // ParseConfiguration - Reads file and returns the parsed configuration
-func ParseConfiguration(fileName string) []*Config {
-	var configs []*Config
+func ParseConfiguration(fileName string) []Config {
+	var configs []Config
 
 	contents, err := ioutil.ReadFile(fileName)
 	if err != nil {

@@ -13,7 +13,9 @@ const ServiceName string = "FileSort"
 
 var elog debug.Log
 
-type fileSortService struct{}
+type fileSortService struct {
+	configs []Config
+}
 
 //Execute - Executes a command for the service
 func (fss *fileSortService) Execute(args []string, cr <-chan svc.ChangeRequest, status chan<- svc.Status) (ssec bool, errno uint32) {
@@ -21,7 +23,13 @@ func (fss *fileSortService) Execute(args []string, cr <-chan svc.ChangeRequest, 
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown | svc.AcceptPauseAndContinue
 
 	watcher := NewWatcher()
-	//TODO get config data
+	for _, c := range fss.configs {
+		watcher.AddWatcherDirectory(c.DestinationPath)
+	}
+
+	watcher.Start()
+	defer watcher.Stop()
+
 	fileMover := NewFileMover(nil)
 
 loop:
@@ -48,7 +56,7 @@ loop:
 	return
 }
 
-func runService() {
+func runService(configs []Config) {
 	var err error
 
 	elog, err = eventlog.Open(ServiceName)
@@ -61,7 +69,7 @@ func runService() {
 	elog.Info(1, fmt.Sprintf("starting %s service", ServiceName))
 	run := svc.Run
 
-	err = run(ServiceName, &fileSortService{})
+	err = run(ServiceName, &fileSortService{configs})
 	if err != nil {
 		elog.Error(1, fmt.Sprintf("%s service failed: %v", ServiceName, err))
 		return
