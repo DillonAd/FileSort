@@ -15,12 +15,14 @@ func main() {
 	flag.Parse()
 	fmt.Println("Reading configuration : " + configFile)
 
-	configs := ParseConfiguration(configFile)
+	var configs []*Config
+	configs = ParseConfiguration(configFile)
 	watcher := NewWatcher()
-
+	defer watcher.Stop()
 	for _, c := range configs {
 		watcher.AddWatcherDirectory(c.DestinationPath)
 	}
 
-	watcher.Start()
+	go watcher.Start()
+
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 )
 
 // Config - Struct to hold configuration data
@@ -12,14 +13,18 @@ type Config struct {
 }
 
 // ParseConfiguration - Reads file and returns the parsed configuration
-func ParseConfiguration(fileName string) []Config {
-	var configs []Config
+func ParseConfiguration(fileName string) []*Config {
+	var configs []*Config
 
 	contents, err := ioutil.ReadFile(fileName)
-	CheckError(err)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	err = json.Unmarshal(contents, &configs)
-	CheckError(err)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	return configs
 }

@@ -16,35 +16,36 @@ type Watcher interface {
 	Stop()
 }
 
-type fswatcher struct {
-	watcher     fsnotify.Watcher
-	directories []string
-	endure      bool
+type FileWatcher struct {
+	watcher      fsnotify.Watcher
+	directories  []string
+	endure       bool
+	FileModified <-chan fileTransit
 }
 
 // NewWatcher - Creates a new instance of Watcher
-func NewWatcher() Watcher {
-	return new(fswatcher)
+func NewWatcher() *FileWatcher {
+	return &FileWatcher{}
 }
 
-func (w *fswatcher) GetWatchedDirectories() []string {
+func (w *FileWatcher) GetWatchedDirectories() []string {
 	return w.directories
 }
 
-func (w *fswatcher) Start() {
+func (w *FileWatcher) Start() {
 	go start(w)
 }
 
-func (w *fswatcher) Stop() {
+func (w *FileWatcher) Stop() {
 	w.watcher.Close()
 }
 
 // AddWatcherDirectory - Adds directory to be watched and recursively adds all directories within that directory
-func (w *fswatcher) AddWatcherDirectory(directory string) {
+func (w *FileWatcher) AddWatcherDirectory(directory string) {
 	addWatcherDirectory(w, directory, 0)
 }
 
-func start(w *fswatcher) {
+func start(w *FileWatcher) {
 	done := make(chan bool)
 
 	go func() {
@@ -65,9 +66,12 @@ func start(w *fswatcher) {
 	<-done
 }
 
-func addWatcherDirectory(watcher *fswatcher, directory string, depth int) {
+func addWatcherDirectory(watcher *FileWatcher, directory string, depth int) error {
 	err := watcher.watcher.Add(directory)
-	CheckError(err)
+	if err != nil {
+		log.Fatalln(err)
+		return err
+	}
 
 	depth++
 
@@ -79,13 +83,17 @@ func addWatcherDirectory(watcher *fswatcher, directory string, depth int) {
 			addWatcherDirectory(watcher, newDirectory, depth)
 		}
 	}
+
+	return nil
 }
 
 func getSubDirectories(directory string) []os.FileInfo {
 	var fileInfo []os.FileInfo
 
 	files, err := ioutil.ReadDir(directory)
-	CheckError(err)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	for _, f := range files {
 		if f.IsDir() {
