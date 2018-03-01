@@ -25,6 +25,7 @@ func (fss *fileSortService) Execute(args []string, cr <-chan svc.ChangeRequest, 
 	//TODO get config data
 	fileMover := NewFileMover(nil)
 
+loop:
 	for {
 		select {
 		case ft := <-watcher.FileModified:
@@ -35,7 +36,7 @@ func (fss *fileSortService) Execute(args []string, cr <-chan svc.ChangeRequest, 
 			case svc.Interrogate:
 				status <- req.CurrentStatus
 			case svc.Stop, svc.Shutdown:
-				break
+				break loop
 			case svc.Pause:
 				status <- svc.Status{State: svc.Paused, Accepts: cmdsAccepted}
 			case svc.Continue:
