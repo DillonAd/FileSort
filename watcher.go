@@ -20,7 +20,7 @@ type FileWatcher struct {
 	watcher      fsnotify.Watcher
 	directories  []string
 	endure       bool
-	FileModified <-chan fileTransit
+	FileModified chan string
 }
 
 // NewWatcher - Creates a new instance of Watcher
@@ -37,6 +37,7 @@ func (w *FileWatcher) Start() {
 }
 
 func (w *FileWatcher) Stop() {
+	w.endure = false
 	w.watcher.Close()
 }
 
@@ -55,7 +56,7 @@ func start(w *FileWatcher) {
 				log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Println("modified file:", event.Name)
-					//fileChanged(event.Name)
+					w.FileModified <- event.Name
 				}
 			case err := <-w.watcher.Errors:
 				log.Println("error:", err)

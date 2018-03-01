@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
@@ -29,8 +28,7 @@ loop:
 	for {
 		select {
 		case ft := <-watcher.FileModified:
-			time.Sleep(time.Second)
-			fileMover.MoveFile(ft)
+			go fileMover.MoveFile(ft)
 		case req := <-cr:
 			switch req.Cmd {
 			case svc.Interrogate:
