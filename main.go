@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 )
 
@@ -17,10 +18,14 @@ func main() {
 	flag.Parse()
 
 	fmt.Println("Reading configuration : " + configFile)
-	contents := ReadConfiguration(configFile)
+	contents, err := ioutil.ReadFile(configFile)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	fmt.Println("Parsing configuration : " + configFile)
-	configs, err := ParseConfiguration(contents)
+	configs, err := new(ConfigurationCollection).ParseConfiguration(contents)
 
 	if err != nil {
 		//TODO better log messages
