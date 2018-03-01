@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"regexp"
 )
 
 // Config - Struct to hold configuration data
@@ -12,16 +13,19 @@ type Config struct {
 	FilePattern     string
 }
 
+//IsMatch - Matches file to configuration's file pattern
+func (c *Config) IsMatch(fileName string) (bool, error) {
+	return regexp.MatchString(c.FilePattern, fileName)
+}
+
 // ParseConfiguration - Reads file and returns the parsed configuration
-func ParseConfiguration(contents []byte) []Config {
+func ParseConfiguration(contents []byte) (ConfigurationCollection, error) {
 	var configs []Config
+	var err error
 
-	err := json.Unmarshal(contents, &configs)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	err = json.Unmarshal(contents, &configs)
 
-	return configs
+	return ConfigurationCollection{configs}, err
 }
 
 //ReadConfiguration - Reads contents of a file

@@ -20,7 +20,12 @@ func main() {
 	contents := ReadConfiguration(configFile)
 
 	fmt.Println("Parsing configuration : " + configFile)
-	configs := ParseConfiguration(contents)
+	configs, err := ParseConfiguration(contents)
+
+	if err != nil {
+		//TODO better log messages
+		log.Fatalln(err)
+	}
 
 	fmt.Println("Running Service")
 	runService(configs, sourcePath)

@@ -14,7 +14,7 @@ const ServiceName string = "FileSort"
 var elog debug.Log
 
 type fileSortService struct {
-	configs []Config
+	configs ConfigurationCollection
 	source  string
 }
 
@@ -24,32 +24,34 @@ func (fss *fileSortService) Execute(args []string, cr <-chan svc.ChangeRequest, 
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown | svc.AcceptPauseAndContinue
 
 	watcher := NewWatcher()
-	for _, c := range fss.configs {
+	for _, c := range fss.configs.configurations {
 		watcher.AddWatcherDirectory(c.DestinationPath)
 	}
 
 	watcher.Start()
 	defer watcher.Stop()
 
-	fileMover := NewFileMover(fss.configs, fss.source)
+	fileMover := NewFileMover(fss.source)
 
 loop:
 	for {
 		select {
-		case ft := <-watcher.FileModified:
+		case fn := <-watcher.FileModified:
 			go func() {
-				success, config, err := fileMover.MatchFile(ft)
+				configs, err := fss.configs.GetMatchingConfigurations(fn)
+
 				if err != nil {
 					elog.Error(1, fmt.Sprintf("unexpected error while matching file name to configurations : #%d\n", err))
 					return
 				}
 
-				if success {
-					err := fileMover.MoveFile(ft, config)
+				if configs != nil {
+					for _, cfg := range configs {
+						err := fileMover.MoveFile(fn, cfg)
 
-					if err != nil {
-						elog.Error(1, fmt.Sprintf("unexpected error while moving file to destination : #%d\n", err))
-						return
+						if err != nil {
+							elog.Error(1, fmt.Sprintf("unexpected error while moving file to destination : #%d\n", err))
+						}
 					}
 				}
 			}()
@@ -72,7 +74,7 @@ loop:
 	return
 }
 
-func runService(configs []Config, source string) {
+func runService(configs ConfigurationCollection, source string) {
 	var err error
 
 	elog, err = eventlog.Open(ServiceName)
