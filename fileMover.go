@@ -48,7 +48,5 @@ func (fm *fileMover) MoveFile(fileName string, config Config) error {
 	var destination string
 
 	//TODO Actually move the file to
-	err := os.Rename(source, destination)
-
-	return err
+	return os.Rename(source, destination)
 }
