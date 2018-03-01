@@ -1,35 +1,54 @@
 package main
 
 import (
-	"log"
 	"os"
+	"regexp"
 )
 
 //FileMover - Contract for moving files
 type FileMover interface {
-	MoveFile(string)
+	MatchFile(string) (bool, Config, error)
+	MoveFile(string, Config) error
 }
 
 type fileMover struct {
-	config []Config
+	configs []Config
+	source  string
 }
 
 //NewFileMover - Returns a new instance of FileMover
-func NewFileMover(configs []Config) FileMover {
+func NewFileMover(configs []Config, defaultSource string) FileMover {
 	fm := &fileMover{}
-	fm.config = configs
-
+	fm.configs = configs
+	fm.source = defaultSource
 	return fm
 }
 
-func (fm *fileMover) MoveFile(fileName string) {
+func (fm *fileMover) MatchFile(fileName string) (bool, Config, error) {
+
+	var cfg Config
+	var err error
+	matched := false
+
+	for _, cfg = range fm.configs {
+		matched, err := regexp.MatchString(cfg.FilePattern, fileName)
+
+		if err == nil && matched {
+			break
+		}
+	}
+
+	return matched, cfg, err
+}
+
+func (fm *fileMover) MoveFile(fileName string, config Config) error {
 	//source := transit.sourceDirectory + transit.fileName
 	//destination := transit.destinationDirectory + transit.fileName
 	var source string
 	var destination string
-	//TODO match to config
+
+	//TODO Actually move the file to
 	err := os.Rename(source, destination)
-	if err != nil {
-		log.Fatalln(err)
-	}
+
+	return err
 }

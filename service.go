@@ -15,6 +15,7 @@ var elog debug.Log
 
 type fileSortService struct {
 	configs []Config
+	source  string
 }
 
 //Execute - Executes a command for the service
@@ -30,13 +31,28 @@ func (fss *fileSortService) Execute(args []string, cr <-chan svc.ChangeRequest, 
 	watcher.Start()
 	defer watcher.Stop()
 
-	fileMover := NewFileMover(nil)
+	fileMover := NewFileMover(fss.configs, fss.source)
 
 loop:
 	for {
 		select {
 		case ft := <-watcher.FileModified:
-			go fileMover.MoveFile(ft)
+			go func() {
+				success, config, err := fileMover.MatchFile(ft)
+				if err != nil {
+					elog.Error(1, fmt.Sprintf("unexpected error while matching file name to configurations : #%d\n", err))
+					return
+				}
+
+				if success {
+					err := fileMover.MoveFile(ft, config)
+
+					if err != nil {
+						elog.Error(1, fmt.Sprintf("unexpected error while moving file to destination : #%d\n", err))
+						return
+					}
+				}
+			}()
 		case req := <-cr:
 			switch req.Cmd {
 			case svc.Interrogate:
@@ -56,7 +72,7 @@ loop:
 	return
 }
 
-func runService(configs []Config) {
+func runService(configs []Config, source string) {
 	var err error
 
 	elog, err = eventlog.Open(ServiceName)
@@ -69,7 +85,7 @@ func runService(configs []Config) {
 	elog.Info(1, fmt.Sprintf("starting %s service", ServiceName))
 	run := svc.Run
 
-	err = run(ServiceName, &fileSortService{configs})
+	err = run(ServiceName, &fileSortService{configs, source})
 	if err != nil {
 		elog.Error(1, fmt.Sprintf("%s service failed: %v", ServiceName, err))
 		return
