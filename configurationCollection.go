@@ -10,12 +10,12 @@ type ConfigurationCollection struct {
 	configurations []Config
 }
 
-// ParseConfiguration - Reads file and returns the parsed configuration
-func (cc *ConfigurationCollection) ParseConfiguration(contents []byte) (ConfigurationCollection, error) {
+// NewConfigurationCollection - Reads file and returns the parsed configuration
+func NewConfigurationCollection(fileContents []byte) (ConfigurationCollection, error) {
 	var configs []Config
 	var err error
 
-	err = json.Unmarshal(contents, &configs)
+	err = json.Unmarshal(fileContents, &configs)
 
 	return ConfigurationCollection{configs}, err
 }

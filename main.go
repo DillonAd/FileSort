@@ -21,11 +21,12 @@ func main() {
 	contents, err := ioutil.ReadFile(configFile)
 
 	if err != nil {
+		//TODO better log messages
 		log.Fatalln(err)
 	}
 
 	fmt.Println("Parsing configuration : " + configFile)
-	configs, err := new(ConfigurationCollection).ParseConfiguration(contents)
+	configs, err := NewConfigurationCollection(contents)
 
 	if err != nil {
 		//TODO better log messages
