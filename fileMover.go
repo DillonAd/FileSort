@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 )
 
 //FileMover - Contract for moving files
@@ -22,11 +23,16 @@ func NewFileMover(defaultSource string) FileMover {
 }
 
 func (fm *fileMover) MoveFile(fileName string, config Config) error {
-	//source := transit.sourceDirectory + transit.fileName
-	//destination := transit.destinationDirectory + transit.fileName
-	var source string
-	var destination string
+	source := completePath(fm.source, fileName)
+	destination := completePath(config.DestinationPath, fileName)
 
-	//TODO Actually move the file to
 	return os.Rename(source, destination)
+}
+
+func completePath(initPath string, fileName string) string {
+	if !strings.HasSuffix(initPath, "/") {
+		initPath = initPath + "/"
+	}
+
+	return initPath + fileName
 }
